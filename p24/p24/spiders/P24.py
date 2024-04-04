@@ -6,6 +6,36 @@ import asyncio
 from scrapy.http import TextResponse
 import requests
 
+from avproxyrotate import start_avast
+import dns.resolver
+import pyuac
+
+
+def rotateips():
+  dns_resolver = dns.resolver.Resolver()
+  if not pyuac.isUserAdmin():
+          pyuac.runAsAdmin()
+          start_avast(
+
+                  sleeptime_reconnect=3,
+
+                  hotkey_change="ctrl+alt+m",  # Changes the proxy server via hotkey
+
+                  hotkey_stop="ctrl+alt+n",  # Kills the script
+
+                  dns=f"{dns_resolver.nameservers[0]}",
+
+                  rotate_server_each_n_seconds=5,  # changes IP each n seconds
+
+                  clear_used_ips_after_n_seconds=3600,  # clears already used IPs during proxy rotation
+
+                  path_app=r"C:\Program Files\Avast Software\SecureLine VPN",  # install folder
+
+                  path_data=r"C:\ProgramData\Avast Software\SecureLine VPN",  # App data - IPs and tlsdomain are extracted from log files, that means, before you use this function, you have to connect to some avast servers using their app
+
+              )
+
+
 def extract_number(text):
     cleaned = text.replace("\\r\\n",'').strip()
     if cleaned != '' :
@@ -26,7 +56,7 @@ def keep_link(string):
       link = match.group(1)
       return link
 
-  
+rotateips()
 class PropScrapper(scrapy.Spider):
 
   name = "propscrap"
@@ -39,7 +69,7 @@ class PropScrapper(scrapy.Spider):
  
   prices_dump =[]
   async def parsecontent(self,link):
-    time.sleep(random.randint(1, 13)) 
+    time.sleep(random.randint(1, 30)) 
     resp = requests.get(link)
     resp = TextResponse(body=resp.content, url=link)
 
@@ -56,6 +86,8 @@ class PropScrapper(scrapy.Spider):
     return f"---------------{full_text}****-------------------------------------"
 
   def parse(self, response):
+    #Rotating IPs from VPN
+    
     
     #CSS SELECTORS
     anchor_selector1 = response.xpath('//a[@class="p24_tileAnchorWrapper"]')
@@ -88,7 +120,7 @@ class PropScrapper(scrapy.Spider):
        
       descriptions.append(description)
       
-    time.sleep(random.randint(5, 10)) 
+    time.sleep(random.randint(3, 10)) 
 
 
   
